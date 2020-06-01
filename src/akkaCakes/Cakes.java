@@ -146,7 +146,7 @@ class Tim extends AbstractActor {
 public class Cakes {
     public static void main(String[] args) {
         ClassLoader.getSystemClassLoader().setDefaultAssertionStatus(true);
-        Gift g = computeGift(1000);
+        Gift g = computeGift(1000, 10);
         assert g != null;
         System.out.println(
                 "\n\n-----------------------------\n\n" +
@@ -154,7 +154,7 @@ public class Cakes {
                         "\n\n-----------------------------\n\n");
     }
 
-    public static Gift computeGift(int hunger) {
+    public static Gift computeGift(int hunger, int maxProducts) {
         ActorSystem s = AkkaConfig.newSystem("Cakes", 2501,
 
                 Collections.emptyMap()
@@ -167,11 +167,11 @@ public class Cakes {
 //            )
         );
         ActorRef alice =//makes wheat
-                s.actorOf(Props.create(Alice.class, () -> new Alice(10)), "Alice");
+                s.actorOf(Props.create(Alice.class, () -> new Alice(maxProducts)), "Alice");
         ActorRef bob =//makes sugar
-                s.actorOf(Props.create(Bob.class, () -> new Bob(10)), "Bob");
+                s.actorOf(Props.create(Bob.class, () -> new Bob(maxProducts)), "Bob");
         ActorRef charles =// makes cakes with wheat and sugar
-                s.actorOf(Props.create(Charles.class, () -> new Charles(10, alice, bob)), "Charles");
+                s.actorOf(Props.create(Charles.class, () -> new Charles(maxProducts, alice, bob)), "Charles");
         ActorRef tim =//tim wants to eat cakes
                 s.actorOf(Props.create(Tim.class, () -> new Tim(hunger, charles)), "Tim");
 
