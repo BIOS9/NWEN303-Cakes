@@ -95,18 +95,25 @@ class Bob extends Producer<Sugar> {
 }
 
 class Charles extends Producer<Cake> {
-    final ActorRef alice, bob;
+    final ActorRef alice;
+    final ActorRef[] bobs;
+    int bobIndex = 0;
 
-    public Charles(int maxProducts, ActorRef alice, ActorRef bob) {
+    public Charles(int maxProducts, ActorRef alice, ActorRef[] bobs) {
         super(Cake.class, maxProducts);
         this.alice = alice;
-        this.bob = bob;
+        this.bobs = bobs;
     }
 
     @Override
     protected CompletableFuture<Cake> make() {
         CompletableFuture<Object> wheat = Patterns.ask(alice, new GiveOne(), Duration.ofMillis(10_000_000)).toCompletableFuture();
-        CompletableFuture<Object> sugar = Patterns.ask(bob, new GiveOne(), Duration.ofMillis(10_000_000)).toCompletableFuture();
+
+        int index = bobIndex++;
+        if(bobIndex >= bobs.length)
+            bobIndex = 0;
+
+        CompletableFuture<Object> sugar = Patterns.ask(bobs[index], new GiveOne(), Duration.ofMillis(10_000_000)).toCompletableFuture();
         return wheat.thenCombine(sugar, (w, s) -> new Cake((Sugar)s, (Wheat)w));
     }
 }
@@ -160,19 +167,23 @@ public class Cakes {
 //                Collections.emptyMap()
 
             AkkaConfig.makeMap(
-                "Tim", "172.17.0.142",
-                "Bob", "172.17.0.142",
-                "Charles", "172.17.0.142"
-                //Alice stays local
+                "Bob0", "172.17.0.142:2300",
+                    "Bob1", "172.17.0.142:2301",
+                    "Bob2", "172.17.0.142:2302",
+                    "Bob3", "172.17.0.142:2303"
             )
         );
 
         ActorRef alice =//makes wheat
                 s.actorOf(Props.create(Alice.class, () -> new Alice(maxProducts)), "Alice");
-        ActorRef bob =//makes sugar
-                s.actorOf(Props.create(Bob.class, () -> new Bob(maxProducts)), "Bob");
+
+        ActorRef[] bobs = new ActorRef[4];
+        for(int i = 0; i < bobs.length; ++i) {
+            bobs[i] = s.actorOf(Props.create(Bob.class, () -> new Bob(maxProducts)), "Bob" + i);
+        }
+
         ActorRef charles =// makes cakes with wheat and sugar
-                s.actorOf(Props.create(Charles.class, () -> new Charles(maxProducts, alice, bob)), "Charles");
+                s.actorOf(Props.create(Charles.class, () -> new Charles(maxProducts, alice, bobs)), "Charles");
         ActorRef tim =//tim wants to eat cakes
                 s.actorOf(Props.create(Tim.class, () -> new Tim(hunger, charles)), "Tim");
 
@@ -181,7 +192,9 @@ public class Cakes {
             return (Gift) gift.join();
         } finally {
             alice.tell(PoisonPill.getInstance(), ActorRef.noSender());
-            bob.tell(PoisonPill.getInstance(), ActorRef.noSender());
+            for(ActorRef bob : bobs) {
+                bob.tell(PoisonPill.getInstance(), ActorRef.noSender());
+            }
             charles.tell(PoisonPill.getInstance(), ActorRef.noSender());
             tim.tell(PoisonPill.getInstance(), ActorRef.noSender());
             s.terminate();
