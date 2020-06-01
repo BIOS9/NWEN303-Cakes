@@ -26,10 +26,10 @@ class MakeOne implements Serializable {
 }
 
 abstract class Producer<T> extends AbstractActor {
-    final Class<T> genericType;
-    final int maxProducts;
-    boolean running;
-    Queue<T> products = new LinkedList<>();
+    public final Class<T> genericType;
+    public final int maxProducts;
+    private boolean running;
+    private Queue<T> products = new LinkedList<>();
 
     protected abstract CompletableFuture<T> make();
 
