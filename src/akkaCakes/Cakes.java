@@ -114,22 +114,26 @@ class Charles extends Producer<Cake> {
 class Tim extends AbstractActor {
     int hunger;
 
-    public Tim(int hunger) {
+    public Tim(int hunger, ActorRef charles) {
         this.hunger = hunger;
+        this.charles = charles;
     }
 
     boolean running = true;
     ActorRef originalSender = null;
+    ActorRef charles;
 
     public Receive createReceive() {
         return receiveBuilder()
                 .match(GiftRequest.class, () -> originalSender == null, gr -> {
                     originalSender = sender();
+                    charles.tell(new GiveOne(), self());
                 })
                 .match(Cake.class, () -> running, c -> {
                     hunger -= 1;
                     System.out.println("JUMMY but I'm still hungry " + hunger);
                     if (hunger > 0) {
+                        charles.tell(new GiveOne(), self());
                         return;
                     }
                     running = false;
@@ -169,8 +173,8 @@ public class Cakes {
         ActorRef charles =// makes cakes with wheat and sugar
                 s.actorOf(Props.create(Charles.class, () -> new Charles(10, alice, bob)), "Charles");
         ActorRef tim =//tim wants to eat cakes
-                s.actorOf(Props.create(Tim.class, () -> new Tim(hunger)), "Tim");
-        
+                s.actorOf(Props.create(Tim.class, () -> new Tim(hunger, charles)), "Tim");
+
         CompletableFuture<Object> gift = Patterns.ask(tim, new GiftRequest(), Duration.ofMillis(10_000_000)).toCompletableFuture();
         try {
             return (Gift) gift.join();
