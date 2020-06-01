@@ -146,7 +146,7 @@ class Tim extends AbstractActor {
 public class Cakes {
     public static void main(String[] args) {
         ClassLoader.getSystemClassLoader().setDefaultAssertionStatus(true);
-        Gift g = computeGift(1000, 10);
+        Gift g = computeGift(1000, 5);
         assert g != null;
         System.out.println(
                 "\n\n-----------------------------\n\n" +
@@ -157,15 +157,16 @@ public class Cakes {
     public static Gift computeGift(int hunger, int maxProducts) {
         ActorSystem s = AkkaConfig.newSystem("Cakes", 2501,
 
-                Collections.emptyMap()
+//                Collections.emptyMap()
 
-//            AkkaConfig.makeMap(
-//                "Tim", "192.168.56.1",
-//                "Bob", "192.168.56.1",
-//                "Charles", "192.168.56.1"
-//                //Alice stays local
-//            )
+            AkkaConfig.makeMap(
+                "Tim", "172.17.0.142",
+                "Bob", "172.17.0.142",
+                "Charles", "172.17.0.142"
+                //Alice stays local
+            )
         );
+
         ActorRef alice =//makes wheat
                 s.actorOf(Props.create(Alice.class, () -> new Alice(maxProducts)), "Alice");
         ActorRef bob =//makes sugar

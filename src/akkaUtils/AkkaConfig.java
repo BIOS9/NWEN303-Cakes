@@ -68,7 +68,7 @@ public class AkkaConfig {
         if (ips.size() != 1) {
             System.err.println("Unable to detect ip between the following options:\n" + ips);
         }
-        String ip = ips.get(ips.size() - 1);
+        String ip = ips.get(0);//ips.size() - 1);
         System.out.println("Chosen IP is\n------------------------------\n    "
                 + ip + "\n------------------------------\n");
         Config config = ConfigFactory.parseString(
