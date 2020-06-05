@@ -161,7 +161,10 @@ public class Cakes {
                         "\n\n-----------------------------\n\n");
     }
 
+    static final int BOB_COUNT = 4; // CHANGE THIS TO CHANGE NUMBER OF BOBS
+
     public static Gift computeGift(int hunger, int maxProducts) {
+
         ActorSystem s = AkkaConfig.newSystem("Cakes", 2501,
 
 //                Collections.emptyMap()
@@ -177,7 +180,7 @@ public class Cakes {
         ActorRef alice =//makes wheat
                 s.actorOf(Props.create(Alice.class, () -> new Alice(maxProducts)), "Alice");
 
-        ActorRef[] bobs = new ActorRef[4];
+        ActorRef[] bobs = new ActorRef[BOB_COUNT];
         for(int i = 0; i < bobs.length; ++i) {
             bobs[i] = s.actorOf(Props.create(Bob.class, () -> new Bob(maxProducts)), "Bob" + i);
         }
