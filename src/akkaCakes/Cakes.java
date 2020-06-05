@@ -187,7 +187,12 @@ public class Cakes {
         ActorRef tim =//tim wants to eat cakes
                 s.actorOf(Props.create(Tim.class, () -> new Tim(hunger, charles)), "Tim");
 
+        long startMillis = System.currentTimeMillis();
         CompletableFuture<Object> gift = Patterns.ask(tim, new GiftRequest(), Duration.ofMillis(10_000_000)).toCompletableFuture();
+        gift.thenAccept((g) -> {
+           long millis = System.currentTimeMillis() - startMillis;
+           System.out.println("Took: " + millis + "ms to get gift.");
+        });
         try {
             return (Gift) gift.join();
         } finally {
